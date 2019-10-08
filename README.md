@@ -45,5 +45,5 @@ To change (and persist) VPN and/or proxy passwords:
 3. `./uninstall.sh`
 
 ## To-Do:
-- Debug all of the command line parameters
-- Maybe re-do `install.sh` using `case` statements to provide better functionality for more use cases
+- Get feedback on the command line parameters (file an issue).
+- Maybe re-do `install.sh` using `case` statements to provide better functionality for more use cases.
