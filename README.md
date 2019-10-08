@@ -47,3 +47,4 @@ To change (and persist) VPN and/or proxy passwords:
 ## To-Do:
 - Get feedback on the command line parameters (file an issue).
 - Maybe re-do `install.sh` using `case` statements to provide better functionality for more use cases.
+- Make the entire setup more secure by using encryption and `$XDG_HOME` config file.
