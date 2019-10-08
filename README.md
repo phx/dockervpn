@@ -12,7 +12,7 @@ DockerVPN is an OpenConnect-based VPN client that exposes an upstream proxy via 
 Connect:                'dockervpn'
 View status/logs:       'dockervpn --status'
 Re-connect:             'dockervpn'
-Disconnect:             'docker stop dockervpn'
+Disconnect:             'docker stop vpn'
 Exec into container:    'sshvpn'
 
 Browse to internal sites: point proxy to '127.0.0.1:8888'

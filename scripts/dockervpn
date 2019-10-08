@@ -22,7 +22,7 @@ echo -e "
 Connect:		'dockervpn'
 View status/logs:	'dockervpn --status'
 Re-connect:		'dockervpn'
-Disconnect:		'docker stop dockervpn'
+Disconnect:		'docker stop vpn'
 Exec into container:	'sshvpn'
 
 Browse to internal sites: point proxy to '127.0.0.1:8888'
@@ -77,7 +77,7 @@ change_vpn_pass() {
   sudo mv -v "$TMP" /usr/local/bin/dockervpn
   sudo chmod +x /usr/local/bin/dockervpn
   if [[ -n $(grep "$NEW_VPN_PASS" /usr/local/bin/dockervpn) ]]; then
-    echo -e '\n[SUCCESS]  Your dockervpn password(s) were changed successfully.'
+    echo -e '\n[SUCCESS]  Your DockerVPN password(s) were changed successfully.'
   else
     echo -e '\n[ERROR]  Please double-check your passwords in /usr/local/bin/dockervpn.\n'
     exit
@@ -85,8 +85,8 @@ change_vpn_pass() {
 }
 
 pre_start() {
-  docker stop dockervpn > /dev/null 2>&1
-  docker rm dockervpn > /dev/null 2>&1
+  docker stop vpn > /dev/null 2>&1
+  docker rm vpn > /dev/null 2>&1
 }
 
 post_start() {
@@ -96,19 +96,19 @@ post_start() {
 
 normal_start() {
   pre_start
-  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_PASS=@@@@VPN_PASS@@@@" -e "PROXY_PASS=@@@@VPN_PASS@@@@" --name dockervpn dockervpn
+  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_PASS=@@@@VPN_PASS@@@@" -e "PROXY_PASS=@@@@VPN_PASS@@@@" --name vpn vpn
   post_start
 }
 
 interactive_start() {
   pre_start
-  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_USER=$VPN_USER" -e "VPN_PASS=$VPN_PASS" -e "PROXY_USER=$VPN_USER" -e "PROXY_PASS=$VPN_PASS" --name dockervpn dockervpn
+  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_USER=$VPN_USER" -e "VPN_PASS=$VPN_PASS" -e "PROXY_USER=$VPN_USER" -e "PROXY_PASS=$VPN_PASS" --name vpn vpn
   post_start
 }
 
 alt_endpoint_start() {
   pre_start
-  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_USER=$VPN_USER" -e "VPN_PASS=$VPN_PASS" -e "PROXY_USER=$VPN_USER" -e "PROXY_PASS=$VPN_PASS" -e "VPN_ENDPOINT=$VPN_ENDPOINT" --name dockervpn dockervpn
+  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_USER=$VPN_USER" -e "VPN_PASS=$VPN_PASS" -e "PROXY_USER=$VPN_USER" -e "PROXY_PASS=$VPN_PASS" -e "VPN_ENDPOINT=$VPN_ENDPOINT" --name vpn vpn
   post_start
 }
 
@@ -149,7 +149,7 @@ elif [[ ($1 = -c) || ($1 = --creds) ]]; then
   interactive_start
   exit
 elif [[ ($1 = -s) || ($1 = --status) ]]; then
-  docker logs dockervpn
+  docker logs vpn
 else
   normal_start
 fi

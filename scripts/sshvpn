@@ -1,4 +1,4 @@
 #!/bin/bash
 
-docker exec -it dockervpn bash
+docker exec -it vpn bash
 
