@@ -1,0 +1,155 @@
+#!/bin/bash
+##############################################################################
+# Copyright (C) 2018  phx
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published
+#    by the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+#
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+##############################################################################
+
+show_help() {
+echo -e "
+Connect:		'dockervpn'
+View status/logs:	'dockervpn --status'
+Re-connect:		'dockervpn'
+Disconnect:		'docker stop dockervpn'
+Exec into container:	'sshvpn'
+
+Browse to internal sites: point proxy to '127.0.0.1:8888'
+
+To change (and persist) VPN and/or proxy passwords:
+'dockervpn --changepass' OR
+'dockervpn --changepass [OLD_VPN/PROXY_PASS] [NEW_VPN/PROXY_PASS]' OR
+'dockervpn --changepass [OLD_VPN_PASS] [NEW_VPN_PASS] [OLD_PROXY_PASS] [NEW_PROXY_PASS]'
+
+-c | --creds [USER:PASS]                    Specify credentials to use for both VPN_USER/PROXY_USER and VPN_PASS/PROXY_PASS
+
+-h | --help                                 Display this help text.
+
+-i | --interactive                          Run in interactive mode and prompt for VPN_USER, VPN_PASS, PROXY_USER, and PROXY_PASS.
+                                            If you wish to do this, you can remove any hardcoded variables from /usr/local/bin/dockervpn.
+
+-p | --password [VPN_PASS/PROXY_PASS]       Pass the VPN_PASS/PROXY_PASS password on the command line (both passwords must match to use this option.
+
+-s | --status                               Check the status of DockerVPN
+
+-u | --user  [VPN_USER/PROXY_USER]          Specify the user. You will be prompted for password if not combined with -p or --password.
+
+"
+}
+
+change_vpn_pass() {
+  if [[ (-n $2) && (-n $3)  && (-n $4) && (-n $5) ]]; then
+    OLD_VPN_PASS="$2"
+    NEW_VPN_PASS="$3"
+    OLD_PROXY_PASS="$4"
+    NEW_PROXY_PASS="$5"
+  elif [[ (-n $2) && (-n $3) && (-z $4) && (-z $5) ]]; then
+    OLD_VPN_PASS="$2"
+    NEW_VPN_PASS="$3"
+    OLD_PROXY_PASS="$2"
+    NEW_PROXY_PASS="$3"
+  else
+    read -p 'Enter your old VPN password: ' OLD_VPN_PASS
+    read -p 'Enter your new VPN password: ' NEWP_VPN_PASS
+    read -p 'Enter your old PROXY password: ' OLD_PROXY_PASS
+    read -p 'Enter your new VPN password: ' NEW_PROXY_PASS
+  fi
+  if [[ -z $(grep "$OLD_VPN_PASS" /usr/local/bin/dockervpn) ]]; then
+    echo -e '\n[ERROR]  Please check your current password in /usr/local/bin/dockervpn.'
+    exit
+  fi
+  TMP="$(mktemp)"
+  sudo sed "s/$OLD_VPN_PASS/$NEW_VPN_PASS/g" /usr/local/bin/dockervpn > "$TMP" &&\
+  sudo mv -v "$TMP" /usr/local/bin/dockervpn &&\
+  TMP="$(mktemp)" &&\
+  sudo sed "s/$OLD_PROXY_PASS/$NEW_PROXY_PASS/g" /usr/local/bin/dockervpn > "$TMP" &&\
+  sudo mv -v "$TMP" /usr/local/bin/dockervpn
+  sudo chmod +x /usr/local/bin/dockervpn
+  if [[ -n $(grep "$NEW_VPN_PASS" /usr/local/bin/dockervpn) ]]; then
+    echo -e '\n[SUCCESS]  Your dockervpn password(s) were changed successfully.'
+  else
+    echo -e '\n[ERROR]  Please double-check your passwords in /usr/local/bin/dockervpn.\n'
+    exit
+  fi
+}
+
+pre_start() {
+  docker stop dockervpn > /dev/null 2>&1
+  docker rm dockervpn > /dev/null 2>&1
+}
+
+post_start() {
+  uname -a | grep Linux > /dev/null && show_help | head -9 | sed -r 's/Connect:.*/VPN STATUS:\t\trunning/'
+  uname -a | grep Darwin > /dev/null && show_help | head -9 | sed -E 's/Connect:.*/VPN STATUS:\t\trunning/'
+}
+
+normal_start() {
+  pre_start
+  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_PASS=@@@@VPN_PASS@@@@" -e "PROXY_PASS=@@@@VPN_PASS@@@@" --name dockervpn dockervpn
+  post_start
+}
+
+interactive_start() {
+  pre_start
+  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_USER=$VPN_USER" -e "VPN_PASS=$VPN_PASS" -e "PROXY_USER=$VPN_USER" -e "PROXY_PASS=$VPN_PASS" --name dockervpn dockervpn
+  post_start
+}
+
+alt_endpoint_start() {
+  pre_start
+  docker run --privileged -v $HOME/share:/mnt/host -dp 8888:8888 -e "VPN_USER=$VPN_USER" -e "VPN_PASS=$VPN_PASS" -e "PROXY_USER=$VPN_USER" -e "PROXY_PASS=$VPN_PASS" -e "VPN_ENDPOINT=$VPN_ENDPOINT" --name dockervpn dockervpn
+  post_start
+}
+
+#### START:
+
+if [[ -n $(echo "${@}" | grep -E '(-h)|(help)') ]]; then
+  show_help
+  exit
+elif [[ -n $(echo "${@}" | grep changepass) ]]; then
+  change_vpn_pass "${@}"
+  exit
+elif [[ ($1 = -i) || ($1 = --interactive) ]]; then
+  read -p 'VPN Username: ' VPN_USER
+  read -p 'VPN Password: ' VPN_PASS
+  read -p 'Proxy Username: ' PROXY_USER
+  read -p 'Proxy Password: ' PROXY_PASS
+  interactive_start
+  exit
+elif [[ (-n $(echo "${@}" | grep '\-u')) || (-n $(echo "${@}" | grep '\-\-user')) ]]; then
+  if [[ ($3 = -p) || ($3 = --password) ]]; then
+    VPN_USER="$2"
+    VPN_PASS="$3"
+    PROXY_USER="$2"
+    PROXY_PASS="$3"
+    interactive_start
+    exit
+  else
+    VPN_USER="$2"
+    PROXY_USER="$2"
+    read -p 'Password: ' VPN_PASS
+    PROXY_PASS="$VPN_PASS"
+    interactive_start
+    exit
+  fi
+elif [[ ($1 = -c) || ($1 = --creds) ]]; then
+  VPN_USER="$(echo "$2" | cut -d ':' -f1)"
+  VPN_PASS="$(echo "$2" | cut -d ':' -f2)"
+  interactive_start
+  exit
+elif [[ ($1 = -s) || ($1 = --status) ]]; then
+  docker logs dockervpn
+else
+  normal_start
+fi
