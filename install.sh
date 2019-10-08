@@ -61,7 +61,8 @@ chmod +x scripts/dockervpn && chmod +x scripts/vpn.sh
 
 echo -e '\nThe following commands may require your password for sudo.\n'
 
-sudo docker build -t dockervpn .
+./uninstall.sh
+sudo docker build -t vpn .
 
 if [[ $? -eq 0 ]]; then
   mkdir -p "${HOME}/share"
