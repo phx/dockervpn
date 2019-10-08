@@ -22,18 +22,22 @@ To change (and persist) VPN and/or proxy passwords:
 'dockervpn --changepass [OLD_VPN/PROXY_PASS] [NEW_VPN/PROXY_PASS]' OR
 'dockervpn --changepass [OLD_VPN_PASS] [NEW_VPN_PASS] [OLD_PROXY_PASS] [NEW_PROXY_PASS]'
 
--c | --creds [USER:PASS]                Specify credentials to use for both VPN_USER/PROXY_USER and VPN_PASS/PROXY_PASS.
+-c | --creds [USER:PASS]                Specify credentials to use for both VPN_USER/PROXY_USER
+                                        and VPN_PASS/PROXY_PASS.
 
 -h | --help                             Display this help text.
 
--i | --interactive                      Run in interactive mode and prompt for VPN_USER, VPN_PASS, PROXY_USER, and PROXY_PASS.
-                                        If you wish to do this, you can remove any hardcoded variables from /usr/local/bin/dockervpn.
+-i | --interactive                      Run in interactive mode and prompt for VPN_USER, VPN_PASS,
+                                        PROXY_USER, and PROXY_PASS. If you wish to do this, you can
+                                        remove any hardcoded variables from /usr/local/bin/dockervpn.
 
--p | --password [VPN_PASS/PROXY_PASS]   Pass the VPN_PASS/PROXY_PASS password on the command line (both passwords must match to use this option.
+-p | --password [VPN_PASS/PROXY_PASS]   Pass the VPN_PASS/PROXY_PASS password on the command line
+                                        (both passwords must match to use this option).
 
 -s | --status                           Check the status of DockerVPN.
 
--u | --user  [VPN_USER/PROXY_USER]      Specify the user. You will be prompted for password if not combined with -p or --password.
+-u | --user  [VPN_USER/PROXY_USER]      Specify the user. You will be prompted for password if not
+                                        combined with -p or --password.
 ```
 ## Uninstall:
 1. `git clone https://github.com/phx/dockervpn.git` (in case you already deleted it)
