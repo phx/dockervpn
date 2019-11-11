@@ -95,7 +95,7 @@ post_start() {
 		uname -a | grep Linux >/dev/null && show_help | head -9 | sed -r 's/Connect:.*/VPN STATUS:\t\trunning/'
 		uname -a | grep Darwin >/dev/null && show_help | head -9 | sed -E 's/Connect:.*/VPN STATUS:\t\trunning/'
 	else
-		echo "Failed to start..."
+		echo -e "\n[ERROR]  Failed to start:\n"
 		docker logs vpn
 	fi
 }
