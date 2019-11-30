@@ -92,8 +92,8 @@ pre_start() {
 post_start() {
 	sleep 2
 	if $(docker inspect -f '{{.State.Running}}' vpn); then
-		uname -a | grep Linux >/dev/null && show_help | head -9 | sed -r 's/Connect:.*/VPN STATUS:\t\trunning/'
-		uname -a | grep Darwin >/dev/null && show_help | head -9 | sed -E 's/Connect:.*/VPN STATUS:\t\trunning/'
+		uname -a | grep Linux >/dev/null && show_help | head -9 | sed -r 's/Connect:.*/VPN STATUS:\\t\\trunning/'
+		uname -a | grep Darwin >/dev/null && show_help | head -9 | sed -E 's/Connect:.*/VPN STATUS:\\t\\trunning/'
 	else
 		echo -e "\n[ERROR]  Failed to start:\n"
 		docker logs vpn
