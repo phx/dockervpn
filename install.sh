@@ -17,74 +17,73 @@
 #
 ##############################################################################
 
-echo && read -p 'Do you already have docker installed? [y/n] ' DOCKER
+echo && read -rp 'Do you already have docker installed? [y/n] ' DOCKER
 
 if [[ ($DOCKER = n) || ($DOCKER = no) ]]; then
-  echo -e '\nWe will install docker interactively before building the image.\n'
-  curl -fsSL 'https://raw.githubusercontent.com/phx/dockerinstall/master/install_docker.sh' | /bin/bash 
+	echo -e '\nWe will install docker interactively before building the image.\n'
+	curl -fsSL 'https://raw.githubusercontent.com/phx/dockerinstall/master/install_docker.sh' | /bin/bash
 fi
 
 # parse .env file if it exists
 if [[ -f .env ]]; then
-  values="$(awk -F '=' '{print $2}' .env)"
-  VPN_USER="$(echo "$values" | head -1)"
-  VPN_PASS="$(echo "$values" | awk 'NR==2')"
-  SECRET_KEY="$(echo "$values" | awk 'NR==3')"
-  VPN_ENDPOINT="$(echo "$values" | awk 'NR==4')"
-  PROXY_USER="$(echo "$values" | awk 'NR==5')"
-  PROXY_PASS="$(echo "$values" | awk 'NR==6')"
-  PROXY_HOST="$(echo "$values" | awk 'NR==7')"
-  PROXY_PORT="$(echo "$values" | awk 'NR==8')"
+	values="$(awk -F '=' '{print $2}' .env)"
+	VPN_USER="$(echo "$values" | head -1)"
+	VPN_PASS="$(echo "$values" | awk 'NR==2')"
+	SECRET_KEY="$(echo "$values" | awk 'NR==3')"
+	VPN_ENDPOINT="$(echo "$values" | awk 'NR==4')"
+	PROXY_USER="$(echo "$values" | awk 'NR==5')"
+	PROXY_PASS="$(echo "$values" | awk 'NR==6')"
+	PROXY_HOST="$(echo "$values" | awk 'NR==7')"
+	PROXY_PORT="$(echo "$values" | awk 'NR==8')"
 else
-  read -p 'Enter your VPN username: ' VPN_USER
-  read -p 'Enter your VPN password: ' VPN_PASS
-  read -p 'Enter your VPN secret key: ' SECRET_KEY
-  read -p 'Enter your VPN endpoint: ' VPN_ENDPOINT
-  read -p 'Enter your PROXY username: [none] ' PROXY_USER
-  read -p 'Enter your PROXY password: [none] ' PROXY_PASS
-  read -p 'Enter your upstream remote PROXY IP address: ' PROXY_HOST
-  read -p 'Enter your upstream remote PROXY port: ' PROXY_PORT
+	read -rp 'Enter your VPN username: ' VPN_USER
+	read -rp 'Enter your VPN password: ' VPN_PASS
+	read -rp 'Enter your VPN secret key: ' SECRET_KEY
+	read -rp 'Enter your VPN endpoint: ' VPN_ENDPOINT
+	read -rp 'Enter your PROXY username: [none] ' PROXY_USER
+	read -rp 'Enter your PROXY password: [none] ' PROXY_PASS
+	read -rp 'Enter your upstream remote PROXY IP address: ' PROXY_HOST
+	read -rp 'Enter your upstream remote PROXY port: ' PROXY_PORT
 fi
 
 # Remove 'sed -i' for MacOS native compatibility:
-sed "s/\[VPN_USER\]/$VPN_USER/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/\[VPN_PASS\]/$VPN_PASS/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/\[SECRET_KEY\]/$SECRET_KEY/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/\[PROXY_USER\]/$PROXY_USER/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/\[PROXY_PASS\]/$PROXY_PASS/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/\[PROXY_HOST\]/$PROXY_HOST/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/\[PROXY_PORT\]/$PROXY_PORT/" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/@@@@VPN_PASS@@@@/$VPN_PASS/g" scripts/dockervpn > tmp && mv tmp scripts/dockervpn
-sed "s/@@@@PROXY_PASS@@@@/$PROXY_PASS/g" scripts/dockervpn > tmp && mv tmp scripts/dockervpn
-sed "s@\[VPN_ENDPOINT\]@$VPN_ENDPOINT@g" scripts/vpn.sh > tmp && mv tmp scripts/vpn.sh
+sed "s/\\[VPN_USER\\]/$VPN_USER/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/\\[VPN_PASS\\]/$VPN_PASS/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/\\[SECRET_KEY\\]/$SECRET_KEY/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/\\[PROXY_USER\\]/$PROXY_USER/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/\\[PROXY_PASS\\]/$PROXY_PASS/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/\\[PROXY_HOST\\]/$PROXY_HOST/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/\\[PROXY_PORT\\]/$PROXY_PORT/" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/@@@@VPN_PASS@@@@/$VPN_PASS/g" scripts/dockervpn >tmp && mv tmp scripts/dockervpn
+sed "s/@@@@PROXY_PASS@@@@/$PROXY_PASS/g" scripts/dockervpn >tmp && mv tmp scripts/dockervpn
+sed "s@\\[VPN_ENDPOINT\\]@$VPN_ENDPOINT@g" scripts/vpn.sh >tmp && mv tmp scripts/vpn.sh
 chmod +x scripts/dockervpn && chmod +x scripts/vpn.sh
 
 echo -e '\nThe following commands may require your password for sudo.\n'
 
 ./uninstall.sh
-sudo docker build -t vpn .
 
-if [[ $? -eq 0 ]]; then
-  mkdir -p "${HOME}/share"
-  echo -e '\nCopying easy startup scripts to /usr/local/bin...'
-  echo -e '\nThe following commands may require your password for sudo.\n'
-  sudo cp -v scripts/dockervpn /usr/local/bin/
-  sudo chmod +x /usr/local/bin/dockervpn
-  sudo cp -v scripts/sshvpn /usr/local/bin/
-  sudo chmod +x /usr/local/bin/sshvpn
+if sudo docker build -t vpn .; then
+	mkdir -p "${HOME}/share"
+	echo -e '\nCopying easy startup scripts to /usr/local/bin...'
+	echo -e '\nThe following commands may require your password for sudo.\n'
+	sudo cp -v scripts/dockervpn /usr/local/bin/
+	sudo chmod +x /usr/local/bin/dockervpn
+	sudo cp -v scripts/sshvpn /usr/local/bin/
+	sudo chmod +x /usr/local/bin/sshvpn
 fi
 
 # Sanitize Modified Installation Files:
-sed "s/VPN_USER=${VPN_USER}/VPN_USER=\[VPN_USER\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/VPN_PASS=${VPN_PASS}/VPN_PASS=\[VPN_PASS\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/SECRET_KEY=${SECRET_KEY}/SECRET_KEY=\[SECRET_KEY\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/PROXY_USER=${PROXY_USER}/PROXY_USER=\[PROXY_USER\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/PROXY_PASS=${PROXY_PASS}/PROXY_PASS=\[PROXY_PASS\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/PROXY_HOST=${PROXY_HOST}/PROXY_HOST=\[PROXY_HOST\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/PROXY_PORT=${PROXY_PORT}/PROXY_PORT=\[PROXY_PORT\]/g" Dockerfile > tmp && mv tmp Dockerfile
-sed "s/${VPN_PASS}/@@@@VPN_PASS@@@@/g" scripts/dockervpn > tmp && mv tmp scripts/dockervpn
-sed "s/${PROXY_PASS}/@@@@PROXY_PASS@@@@/g" scripts/dockervpn > tmp && mv tmp scripts/dockervpn
-sed "s@${VPN_ENDPOINT}@\[VPN_ENDPOINT\]@g" scripts/vpn.sh > tmp && mv tmp scripts/vpn.sh
+sed "s/VPN_USER=${VPN_USER}/VPN_USER=\\[VPN_USER\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/VPN_PASS=${VPN_PASS}/VPN_PASS=\\[VPN_PASS\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/SECRET_KEY=${SECRET_KEY}/SECRET_KEY=\\[SECRET_KEY\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/PROXY_USER=${PROXY_USER}/PROXY_USER=\\[PROXY_USER\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/PROXY_PASS=${PROXY_PASS}/PROXY_PASS=\\[PROXY_PASS\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/PROXY_HOST=${PROXY_HOST}/PROXY_HOST=\\[PROXY_HOST\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/PROXY_PORT=${PROXY_PORT}/PROXY_PORT=\\[PROXY_PORT\\]/g" Dockerfile >tmp && mv tmp Dockerfile
+sed "s/${VPN_PASS}/@@@@VPN_PASS@@@@/g" scripts/dockervpn >tmp && mv tmp scripts/dockervpn
+sed "s/${PROXY_PASS}/@@@@PROXY_PASS@@@@/g" scripts/dockervpn >tmp && mv tmp scripts/dockervpn
+sed "s@${VPN_ENDPOINT}@\\[VPN_ENDPOINT\\]@g" scripts/vpn.sh >tmp && mv tmp scripts/vpn.sh
 chmod +x scripts/dockervpn && chmod +x scripts/vpn.sh
 
 /usr/local/bin/dockervpn --help | head -9
