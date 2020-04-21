@@ -17,33 +17,30 @@
 #
 ##############################################################################
 
-echo && read -rp 'Do you already have docker installed? [y/n] ' DOCKER
-
-if [[ ($DOCKER = n) || ($DOCKER = no) ]]; then
-	echo -e '\nWe will install docker interactively before building the image.\n'
-	curl -fsSL 'https://raw.githubusercontent.com/phx/dockerinstall/master/install_docker.sh' | /bin/bash
+if ! command -v docker 2>/dev/null; then
+  curl -fsSL 'https://raw.githubusercontent.com/phx/dockerinstall/master/install_docker.sh' | /bin/bash
 fi
 
 # parse .env file if it exists
 if [[ -f .env ]]; then
-	values="$(awk -F '=' '{print $2}' .env)"
-	VPN_USER="$(echo "$values" | head -1)"
-	VPN_PASS="$(echo "$values" | awk 'NR==2')"
-	SECRET_KEY="$(echo "$values" | awk 'NR==3')"
-	VPN_ENDPOINT="$(echo "$values" | awk 'NR==4')"
-	PROXY_USER="$(echo "$values" | awk 'NR==5')"
-	PROXY_PASS="$(echo "$values" | awk 'NR==6')"
-	PROXY_HOST="$(echo "$values" | awk 'NR==7')"
-	PROXY_PORT="$(echo "$values" | awk 'NR==8')"
+  values="$(awk -F '=' '{print $2}' .env)"
+  VPN_USER="$(echo "$values" | head -1)"
+  VPN_PASS="$(echo "$values" | awk 'NR==2')"
+  SECRET_KEY="$(echo "$values" | awk 'NR==3')"
+  VPN_ENDPOINT="$(echo "$values" | awk 'NR==4')"
+  PROXY_USER="$(echo "$values" | awk 'NR==5')"
+  PROXY_PASS="$(echo "$values" | awk 'NR==6')"
+  PROXY_HOST="$(echo "$values" | awk 'NR==7')"
+  PROXY_PORT="$(echo "$values" | awk 'NR==8')"
 else
-	read -rp 'Enter your VPN username: ' VPN_USER
-	read -rp 'Enter your VPN password: ' VPN_PASS
-	read -rp 'Enter your VPN secret key: ' SECRET_KEY
-	read -rp 'Enter your VPN endpoint: ' VPN_ENDPOINT
-	read -rp 'Enter your PROXY username: [none] ' PROXY_USER
-	read -rp 'Enter your PROXY password: [none] ' PROXY_PASS
-	read -rp 'Enter your upstream remote PROXY IP address: ' PROXY_HOST
-	read -rp 'Enter your upstream remote PROXY port: ' PROXY_PORT
+  read -rp 'Enter your VPN username: ' VPN_USER
+  read -rp 'Enter your VPN password: ' VPN_PASS
+  read -rp 'Enter your VPN secret key: ' SECRET_KEY
+  read -rp 'Enter your VPN endpoint: ' VPN_ENDPOINT
+  read -rp 'Enter your PROXY username: [none] ' PROXY_USER
+  read -rp 'Enter your PROXY password: [none] ' PROXY_PASS
+  read -rp 'Enter your upstream remote PROXY IP address: ' PROXY_HOST
+  read -rp 'Enter your upstream remote PROXY port: ' PROXY_PORT
 fi
 
 # Remove 'sed -i' for MacOS native compatibility:
@@ -64,13 +61,13 @@ echo -e '\nThe following commands may require your password for sudo.\n'
 ./uninstall.sh
 
 if sudo docker build -t vpn .; then
-	mkdir -p "${HOME}/share"
-	echo -e '\nCopying easy startup scripts to /usr/local/bin...'
-	echo -e '\nThe following commands may require your password for sudo.\n'
-	sudo cp -v scripts/dockervpn /usr/local/bin/
-	sudo chmod +x /usr/local/bin/dockervpn
-	sudo cp -v scripts/sshvpn /usr/local/bin/
-	sudo chmod +x /usr/local/bin/sshvpn
+  mkdir -p "${HOME}/share"
+  echo -e '\nCopying easy startup scripts to /usr/local/bin...'
+  echo -e '\nThe following commands may require your password for sudo.\n'
+  sudo cp -v scripts/dockervpn /usr/local/bin/
+  sudo chmod +x /usr/local/bin/dockervpn
+  sudo cp -v scripts/sshvpn /usr/local/bin/
+  sudo chmod +x /usr/local/bin/sshvpn
 fi
 
 # Sanitize Modified Installation Files:
