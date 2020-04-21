@@ -17,7 +17,7 @@
 #
 ##############################################################################
 
-if ! command -v docker 2>/dev/null; then
+if ! command -v docker &>/dev/null; then
   curl -fsSL 'https://raw.githubusercontent.com/phx/dockerinstall/master/install_docker.sh' | /bin/bash
 fi
 
